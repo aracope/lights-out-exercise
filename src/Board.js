@@ -27,25 +27,34 @@ import "./Board.css";
  *
  **/
 
-function Board({ nrows, ncols, chanceLightStartsOn }) {
+function Board({ nrows = 5, ncols = 5, chanceLightStartsOn = 0.25 }) {
   const [board, setBoard] = useState(createBoard());
 
   /** create a board nrows high/ncols wide, each cell randomly lit or unlit */
   function createBoard() {
     let initialBoard = [];
-    // TODO: create array-of-arrays of true/false values
+    for (let y = 0; y < nrows; y++) {
+      let row = [];
+      for (let x = 0; x < ncols; x++) {
+        row.push(Math.random() < chanceLightStartsOn)
+      }
+      initialBoard.push(row);
+    }
     return initialBoard;
   }
 
+    /** Check the board in state to determine whether the player has won. */
   function hasWon() {
-    // TODO: check the board in state to determine whether the player has won.
+    return board.every(row => row.every(cell => !cell));
   }
 
+    /** Flip a cell and the cells around it */
   function flipCellsAround(coord) {
     setBoard(oldBoard => {
       const [y, x] = coord.split("-").map(Number);
+      const boardCopy = oldBoard.map(row => [...row]);
 
-      const flipCell = (y, x, boardCopy) => {
+      const flipCell = (y, x) => {
         // if this coord is actually on board, flip it
 
         if (x >= 0 && x < ncols && y >= 0 && y < nrows) {
@@ -53,21 +62,42 @@ function Board({ nrows, ncols, chanceLightStartsOn }) {
         }
       };
 
-      // TODO: Make a (deep) copy of the oldBoard
+      flipCell(y, x);
+      flipCell(y, x - 1);
+      flipCell(y, x + 1);
+      flipCell(y - 1, x);
+      flipCell(y + 1, x);
 
-      // TODO: in the copy, flip this cell and the cells around it
-
-      // TODO: return the copy
+      return boardCopy;
     });
   }
 
-  // if the game is won, just show a winning msg & render nothing else
+  if (hasWon()) {
+    return <div className="Board-title">
+      <h1>YOU WIN!</h1>
+    </div>;
+  }
 
-  // TODO
+  const tblBoard = board.map((row, y) => (
+    <tr key={y}>
+      {row.map((cell, x) => (
+        <Cell
+          key={`${y}-${x}`}
+          isLit={cell}
+          flipCellsAroundMe={() => flipCellsAround(`${y}-${x}`)}
+        />
+      ))}
+    </tr>
+  ));
 
-  // make table board
+  return (
+    <div>
+      <table className="Board">
+        <tbody>{tblBoard}</tbody>
+      </table>
+    </div>
+  );
 
-  // TODO
 }
 
 export default Board;
